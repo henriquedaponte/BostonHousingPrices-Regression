@@ -75,11 +75,11 @@ Ytrain_pred1, beta1, alpha1 = trainModel(X_train1, Y_train1) # 30% training data
 Ytrain_pred2, beta2, alpha2 = trainModel(X_train2, Y_train2) # 60% training data
 
 
-
 # ====================== Testing the model ======================
 
 Y_pred1 =  alpha1 + X_test1 @ beta1 # 30% training data
 Y_pred2 =  alpha2 + X_test2 @ beta2 # 60% training data
+
 
 # ====================== Printing Results ======================
 
