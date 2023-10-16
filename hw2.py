@@ -19,8 +19,18 @@ def meanSquaredError(predicted, actual):
     The mean squared error is computed as the average of the squared differences between predicted and actual values.
     '''
     
+   # Ensure that predicted array is not empty
+    if len(predicted) == 0:
+        raise ValueError("Predicted array is empty.")
+        
+    # Ensure that there are no NaN values in predicted and actual arrays
+    if np.isnan(predicted).any() or np.isnan(actual).any():
+        raise ValueError("NaN values detected in input arrays.")
+    
     r = actual - predicted # Residuals
-    return round(np.sum(r**2)/len(predicted))
+    mse = np.sum(r**2) / len(predicted)
+    
+    return round(mse)
 
 def preprocessData(filename, trainDataPct):
     '''
@@ -53,7 +63,7 @@ def preprocessData(filename, trainDataPct):
 
     return X_train, Y_train, X_test, Y_test
     
-def trainModel(X_train, Y_train):
+def trainLinearModel(X_train, Y_train):
     ''''
     Trains a linear regression model using CVX optimization.
     
@@ -76,7 +86,7 @@ def trainModel(X_train, Y_train):
     Ytrain_pred = alpha + X_train @ beta
 
     # Defining objective function
-    objective = cp.Minimize(cp.sum_squares(Ytrain_pred - Y_train))
+    objective = cp.Minimize(cp.sum_squares(Y_train - Ytrain_pred))
 
     # Formulating problem
     problem = cp.Problem(objective)
@@ -86,33 +96,119 @@ def trainModel(X_train, Y_train):
 
     return Ytrain_pred.value, beta.value, alpha.value
 
+def trainL1Model(X_train, Y_train):
+    ''''
+    
+    
+    Parameters:
+    
+    
+    Returns:
+    
+    '''
 
-# ====================== Data Preprocessing =====================
+    # Initilizing decision variables
+    beta = cp.Variable((X_train.shape[1], 1))
 
-X_train1, Y_train1, X_test1, Y_test1 = preprocessData('housing.txt', 0.3) # Training with 30% of data
-X_train2, Y_train2, X_test2, Y_test2 = preprocessData('housing.txt', 0.6) # Training with 60% of data
+    # Defining function for our predictions
+    Ytrain_pred = X_train @ beta
 
+    # Defining objective function
+    objective = cp.Minimize(cp.sum(cp.abs(Y_train - Ytrain_pred)))
 
-# ====================== Training the model ======================
+    # Formulating problem
+    problem = cp.Problem(objective)
 
-Ytrain_pred1, beta1, alpha1 = trainModel(X_train1, Y_train1) # 30% training data
-Ytrain_pred2, beta2, alpha2 = trainModel(X_train2, Y_train2) # 60% training data
+    # solving the problem
+    problem.solve()
 
+    return Ytrain_pred.value, beta.value, 0
 
-# ====================== Testing the model ======================
+def trainPolynomialModel(X_train, Y_train):
+    '''
+    Trains a polynomial regression model using CVX optimization.
+    
+    Parameters:
+    - X_train (numpy array): Training data attributes.
+    - Y_train (numpy array): Training data target values.
+    
+    Returns:
+    - tuple:
+        - Ytrain_pred (numpy array): Predicted values for the training data.
+        - betas (numpy array): Learned coefficients for the attributes.
+        - alpha (float): Learned intercept term.
+    '''
 
-Y_pred1 =  alpha1 + X_test1 @ beta1 # 30% training data
-Y_pred2 =  alpha2 + X_test2 @ beta2 # 60% training data
+    num_features = X_train.shape[1]
 
+    # Generating polynomial terms for the input features
+    X_poly = np.hstack([X_train, X_train**2, X_train**3])
+    
+    # Initializing decision variables
+    alpha = cp.Variable()
+    betas = cp.Variable((3 * num_features, 1))
+    
+    # Defining function for our predictions
+    Ytrain_pred = alpha + X_poly @ betas
 
-# ====================== Printing Results ======================
+    # Defining objective function
+    objective = cp.Minimize(cp.sum_squares(Y_train - Ytrain_pred))
 
-# 30% training data
-print('Mean squared error for training data (30%): ', meanSquaredError(Ytrain_pred1, Y_train1))
-print('Mean squared error for testing data (30%): ', meanSquaredError(Y_pred1, Y_test1))
+    # Formulating problem
+    problem = cp.Problem(objective)
 
-print('\n') # Creating separation for better readability
+    # Solving the problem
+    problem.solve(solver=cp.SCS)
 
-# 60% training data
-print('Mean squared error for training data (60%): ', meanSquaredError(Ytrain_pred2, Y_train2))
-print('Mean squared error for testing data (60%): ', meanSquaredError(Y_pred2, Y_test2))
+    return Ytrain_pred.value, betas.value, alpha.value
+
+def deployModel(filename, split, trainMethod, modelName, poly=False):
+    '''
+    Trains a regression model on a given dataset and computes the mean squared error for both training and test data.
+    
+    Parameters:
+    - filename (str): Path to the input data file.
+    - split (float): Percentage (expressed as a decimal, e.g., 0.3 for 30%) of data to be used for training.
+    - trainMethod (function): A function that trains the model. This function should return predicted values for the training set, coefficients for the attributes, and an intercept term.
+    - modelName (str): A descriptive name for the model which will be used in print statements.
+    - poly (bool, optional): If True, the function assumes the model is polynomial and will generate polynomial terms for the test data. Default is False.
+    
+    Returns:
+    None
+    
+    Outputs:
+    The function prints the mean squared error for the training data and test data. 
+    
+    Notes:
+    - This function assumes the input data file is tab-delimited and the target values are in the last column.
+    - The preprocessData function is used to split the data and should be defined elsewhere in the code.
+    - If 'poly' is set to True, the function will generate polynomial terms up to the third degree for the test data.
+    
+    Example:
+    deployModel('data.txt', 0.3, trainLinearModel, "Linear Regression")
+    deployModel('data.txt', 0.3, trainPolynomialModel, "Polynomial Regression", poly=True)
+    '''
+
+    X_train, Y_train, X_test, Y_test = preprocessData(filename, split) # Splitting with split% of data for training
+
+    Ytrain_pred, beta, alpha = trainMethod(X_train, Y_train) # Training with split% training data on 'model' model
+
+    if poly:
+        X_test = np.hstack([X_test, X_test**2, X_test**3])
+        Y_pred =  alpha + X_test @ beta # Testing 30% data of the data for training on polynomial model
+        
+    else:
+        Y_pred =  alpha + X_test @ beta # Testing split% of the data for training on 'model' model
+
+    print(f'Mean squared error for training data on {modelName} model ({split * 100}% of data for training): ', meanSquaredError(Ytrain_pred, Y_train))
+    print(f'Mean squared error for testing data on {modelName} model ({split* 100}% of data for training): ', meanSquaredError(Y_pred, Y_test))
+    print('\n')
+
+# ====================== Main ======================
+
+deployModel('housing.txt', 0.3, trainLinearModel, 'Linear', poly=False)
+deployModel('housing.txt', 0.6, trainLinearModel, 'Linear', poly=False)
+deployModel('housing.txt', 0.3, trainPolynomialModel, 'Polynomial', poly=True)
+deployModel('housing.txt', 0.6, trainPolynomialModel, 'Polynomial', poly=True)
+deployModel('housing.txt', 0.3, trainL1Model, 'L1 Regressor', poly=False)
+deployModel('housing.txt', 0.6, trainL1Model, 'L1 Regressor', poly=False)
