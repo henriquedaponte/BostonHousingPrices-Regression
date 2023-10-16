@@ -97,14 +97,23 @@ def trainLinearModel(X_train, Y_train):
     return Ytrain_pred.value, beta.value, alpha.value
 
 def trainL1Model(X_train, Y_train):
-    ''''
-    
+    '''
+    Trains a linear regression model using L1 (Lasso) regularization with CVX optimization.
     
     Parameters:
-    
+    - X_train (numpy array): Training data attributes/features.
+    - Y_train (numpy array): Training data target/output values.
     
     Returns:
+    - tuple:
+        - Ytrain_pred (numpy array): Predicted values for the training data using the trained L1 model.
+        - beta (numpy array): Learned coefficients for the attributes in the L1 model.
+        - 0 (int): Placeholder for intercept term (always returns 0 since no intercept is used in this model).
     
+    Notes:
+    - The L1 regularization tends to induce sparsity in the model, which means it might produce a model where many feature weights are exactly zero.
+    - The function uses CVX optimization to solve the regression problem with L1 penalty.
+    - This version of L1 regressor does not incorporate an intercept term, hence the return value of 0 for the intercept.
     '''
 
     # Initilizing decision variables
