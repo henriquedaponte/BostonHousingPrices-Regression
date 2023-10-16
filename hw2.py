@@ -21,13 +21,13 @@ def meanSquaredError(predicted, actual):
 data = pd.read_csv('housing.txt', delimiter='\t')
 
 # Using 70% of the data for training
-trainDataSize = int(0.7*data.shape[0])
+trainDataSize = int(0.7 * data.shape[0])
 trainData = data.iloc[:trainDataSize, :]
 X_train = trainData.iloc[:, :-1].values
 Y_train = (trainData.iloc[:, -1].values).reshape(-1, 1)
 
 # Using 30% of the data for testing 
-testDataSize = int(0.3*data.shape[0])
+testDataSize = int(0.3 * data.shape[0])
 testData = data.iloc[trainDataSize:, :]
 X_test = testData.iloc[:, :-1].values
 Y_test = (testData.iloc[:, -1].values).reshape(-1, 1)
@@ -35,7 +35,7 @@ Y_test = (testData.iloc[:, -1].values).reshape(-1, 1)
 # ====================== Training the model ======================
 
 # Initilizing decision variables
-alpha = cp.Variable((X_train.shape[0], 1))
+alpha = cp.Variable()
 beta = cp.Variable((X_train.shape[1], 1))
 
 # Defining function for our predictions
@@ -56,12 +56,11 @@ print('Mean squared error for training data: ', round(meanSquaredError(Ytrain_pr
 # ====================== Testing the model ======================
 
 print('alpha value: ', alpha.value)
-print('alpha size: ', alpha.value.shape)
 print('beta size: ', beta.value.shape)
 print('X_test size: ', X_test.shape)
 
 # Defining function for our predictions
-Y_pred =  X_test @ beta.value
+Y_pred =  alpha.value + X_test @ beta.value
 
 # Printing results
 print('Mean squared error for testing data: ', round(meanSquaredError(Y_pred, Y_test)))
