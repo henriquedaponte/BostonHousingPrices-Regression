@@ -213,7 +213,19 @@ def deployModel(filename, split, trainMethod, modelName, poly=False):
     print(f'Mean squared error for testing data on {modelName} model ({split* 100}% of data for training): ', meanSquaredError(Y_pred, Y_test))
     print('\n')
 
-# ====================== Main ======================
+def f_func_problem_2(x, y):
+    ''''
+    Function provided for Problem 2
+    '''
+    return 0.5*x**2 + x*y - 1.5*y**2 + 2*x + 5*y + (1/3)*y**3
+
+def f_func_problem_3(x1, x2):
+    ''''
+    Function provided for Problem 3
+    '''
+    return x1**2 * x2 - 2*x1 * x2**2 + 4*x1 * x2 - 8
+
+# ====================== Problem 1 ======================
 
 deployModel('housing.txt', 0.3, trainLinearModel, 'Linear', poly=False)
 deployModel('housing.txt', 0.6, trainLinearModel, 'Linear', poly=False)
@@ -221,3 +233,73 @@ deployModel('housing.txt', 0.3, trainPolynomialModel, 'Polynomial', poly=True)
 deployModel('housing.txt', 0.6, trainPolynomialModel, 'Polynomial', poly=True)
 deployModel('housing.txt', 0.3, trainL1Model, 'L1 Regressor', poly=False)
 deployModel('housing.txt', 0.6, trainL1Model, 'L1 Regressor', poly=False)
+
+
+# ====================== Problem 2 ======================
+
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+critical_points_problem_2 = [(-5.0, 3.0), (-3.0, 1.0)]
+classification_problem_2 = {(-5.0, 3.0): 'local minimizer', (-3.0, 1.0): 'saddle point'}
+
+
+# Generate x and y values
+x_values = np.linspace(-10, 10, 400)
+y_values = np.linspace(-10, 10, 400)
+x_mesh, y_mesh = np.meshgrid(x_values, y_values)
+
+# Evaluate the function over the grid
+f_values_2 = f_func_problem_2(x_mesh, y_mesh)
+
+# Plot the surface
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(x_mesh, y_mesh, f_values_2, cmap='viridis', alpha=0.7)
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+ax.set_zlabel('f(x, y)')
+ax.set_title('Surface Plot of f(x, y)')
+ax.view_init(elev=25, azim=-60)
+
+# Mark the critical points on the plot
+for point, label in classification_problem_2.items():
+    ax.scatter(*point, f_func_problem_2(*point), color='r', s=50, label=f"{label} {point}")
+
+# Show the plot
+plt.legend()
+plt.show()
+
+
+# ====================== Problem 3 ======================
+
+critical_points_problem_3 = [(-4, 0), (-4/3, 2/3), (0, 0), (0, 2)]
+classification_problem_3 = {(-4, 0): 'saddle point', (-4/3, 2/3): 'local minimizer', (0, 0): 'saddle point', (0, 2): 'saddle point'}
+
+# Generate x1 and x2 values
+x1_values = np.linspace(-5, 5, 400)
+x2_values = np.linspace(-5, 5, 400)
+x1_mesh, x2_mesh = np.meshgrid(x1_values, x2_values)
+
+# Evaluate the function over the grid
+f_values = f_func_problem_3(x1_mesh, x2_mesh)
+
+# Plot the surface
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(x1_mesh, x2_mesh, f_values, cmap='viridis', alpha=0.7)
+ax.set_xlabel('x1')
+ax.set_ylabel('x2')
+ax.set_zlabel('f(x1, x2)')
+ax.set_title('Surface Plot of f(x1, x2)')
+ax.view_init(elev=25, azim=-60)
+
+# Mark the critical points on the plot
+for point, label in classification_problem_3.items():
+    ax.scatter(*point, f_func_problem_3(*point), color='r', s=50, label=f"{label} {point}")
+
+# Show the plot
+plt.legend()
+plt.show()
+
