@@ -237,9 +237,7 @@ deployModel('housing.txt', 0.6, trainL1Model, 'L1 Regressor', poly=False)
 
 # ====================== Problem 2 ======================
 
-import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 critical_points_problem_2 = [(-5.0, 3.0), (-3.0, 1.0)]
 classification_problem_2 = {(-5.0, 3.0): 'local minimizer', (-3.0, 1.0): 'saddle point'}
